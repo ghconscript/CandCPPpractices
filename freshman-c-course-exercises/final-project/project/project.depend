@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1670598165 source:d:\2022111542\project\main.c
+	<stdio.h>
+	<string.h>
+	<ctype.h>
+	<stdlib.h>
+	<windows.h>
+	<mmsystem.h>
+
+1685794090 source:d:\qq\2022111542\project\main.c
+	<stdio.h>
+	<string.h>
+	<ctype.h>
+	<stdlib.h>
+	<windows.h>
+	<mmsystem.h>
+

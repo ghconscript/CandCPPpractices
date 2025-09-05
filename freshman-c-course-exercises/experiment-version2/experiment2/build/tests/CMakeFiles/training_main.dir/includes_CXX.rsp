@@ -1,0 +1,1 @@
+-I"D:/codes/cpp/hit practicse/experiment2/experiment2/include" -I"D:/codes/cpp/hit practicse/experiment2/experiment2/src" -isystem "D:/codes/cpp/hit practicse/experiment2/experiment2/tests/googletest/include" -isystem "D:/codes/cpp/hit practicse/experiment2/experiment2/tests/googletest"

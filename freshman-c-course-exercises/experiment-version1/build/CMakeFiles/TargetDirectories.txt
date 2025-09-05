@@ -1,0 +1,16 @@
+D:/codes/cpp/hit practicse/experiment/build/CMakeFiles/test.dir
+D:/codes/cpp/hit practicse/experiment/build/CMakeFiles/edit_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/CMakeFiles/rebuild_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/src/CMakeFiles/training.dir
+D:/codes/cpp/hit practicse/experiment/build/src/CMakeFiles/test.dir
+D:/codes/cpp/hit practicse/experiment/build/src/CMakeFiles/edit_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/src/CMakeFiles/rebuild_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/CMakeFiles/training_main.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/CMakeFiles/test.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/CMakeFiles/edit_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/CMakeFiles/rebuild_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/googletest/CMakeFiles/gtest.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/googletest/CMakeFiles/gtest_main.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/googletest/CMakeFiles/test.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/googletest/CMakeFiles/edit_cache.dir
+D:/codes/cpp/hit practicse/experiment/build/tests/googletest/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,26 @@
+[
+{
+  "directory": "D:/codes/cpp/hit practicse/experiment/build/src",
+  "command": "D:\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw64\\bin\\gcc.exe  @CMakeFiles/training.dir/includes_C.rsp -std=gnu99 -Wall -Werror -o CMakeFiles\\training.dir\\Executor.c.obj -c \"D:\\codes\\cpp\\hit practicse\\experiment\\src\\Executor.c\"",
+  "file": "D:/codes/cpp/hit practicse/experiment/src/Executor.c",
+  "output": "src/CMakeFiles/training.dir/Executor.c.obj"
+},
+{
+  "directory": "D:/codes/cpp/hit practicse/experiment/build/tests",
+  "command": "D:\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw64\\bin\\c++.exe  @CMakeFiles/training_main.dir/includes_CXX.rsp -Wno-deprecated-declarations -o CMakeFiles\\training_main.dir\\ExecutorTest.cc.obj -c \"D:\\codes\\cpp\\hit practicse\\experiment\\tests\\ExecutorTest.cc\"",
+  "file": "D:/codes/cpp/hit practicse/experiment/tests/ExecutorTest.cc",
+  "output": "tests/CMakeFiles/training_main.dir/ExecutorTest.cc.obj"
+},
+{
+  "directory": "D:/codes/cpp/hit practicse/experiment/build/tests/googletest",
+  "command": "D:\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw64\\bin\\c++.exe  @CMakeFiles/gtest.dir/includes_CXX.rsp -Wno-deprecated-declarations -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles\\gtest.dir\\src\\gtest-all.cc.obj -c \"D:\\codes\\cpp\\hit practicse\\experiment\\tests\\googletest\\src\\gtest-all.cc\"",
+  "file": "D:/codes/cpp/hit practicse/experiment/tests/googletest/src/gtest-all.cc",
+  "output": "tests/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.obj"
+},
+{
+  "directory": "D:/codes/cpp/hit practicse/experiment/build/tests/googletest",
+  "command": "D:\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw64\\bin\\c++.exe  @CMakeFiles/gtest_main.dir/includes_CXX.rsp -Wno-deprecated-declarations -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles\\gtest_main.dir\\src\\gtest_main.cc.obj -c \"D:\\codes\\cpp\\hit practicse\\experiment\\tests\\googletest\\src\\gtest_main.cc\"",
+  "file": "D:/codes/cpp/hit practicse/experiment/tests/googletest/src/gtest_main.cc",
+  "output": "tests/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.obj"
+}
+]
