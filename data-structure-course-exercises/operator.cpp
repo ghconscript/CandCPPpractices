@@ -16,7 +16,7 @@ bool Empty(STACK S){
 	else
 		return false; 
 }
-char Top(STACK S){
+int Top(STACK S){
 	if (Empty(S))
 		return -1;
 	else
@@ -30,7 +30,7 @@ void Pop(STACK &S){
 	else 
 		S.top=S.top-1;
 }
-void Push(char x,STACK &S){
+void Push(int x,STACK &S){
 	if (S.top==MAX-1)
 	{
 		cout<<"栈满"<<endl;
@@ -49,7 +49,7 @@ int Priority(char op){
 int main(){
 	ifstream inFile;
 	inFile.open("data.txt");
-	string mid,back;
+	string mid,back,numStr;
 	STACK stack;
 	InitStack(stack);
 	getline(inFile, mid);
@@ -57,23 +57,31 @@ int main(){
 	int i=0;
 	char c=mid[i];
 	while (c!='\0'){
-		//对于c++风格字符串 可以不依赖/0 
-		if(c>='0'&&c<='9'){
-			back += c;//直接输出 
+		//对于c++风格字符串 可以不依赖/0 用.sizeof()
+		if(c==' ')continue; 
+		if(isdigit(c)){//c++风格字符串))
+			
+            while (i < mid.size() && isdigit(mid[i])){  // 读取连续数字
+                numStr += mid[i];
+                i++;
+            }
+            back += numStr + " ";  // 加空格，区分多位数
+            i--;  //要考虑到 多位数!!! 
 			
 		}else if(c=='('){
 			Push(c,stack);//左括号入栈 
 			
 		}else if(c==')'){
 			while(stack.elements[stack.top]!='('){
-				back += stack.elements[stack.top];
+				back += char(Top(stack));
+				back+=' ';
 				Pop(stack);//不断弹出符号 直到遇到左括号 
 			}
 			Pop(stack);//弹出左括号  但不加入back 
 			
 		}else{
 			while(Priority(c)<=Priority(stack.elements[stack.top])){
-				back += stack.elements[stack.top];
+				back += char(Top(stack));
 				Pop(stack);//如果栈顶符号优先级大于等于c 将栈顶运算符弹出输出 不断比较新的运算符直到入栈   
 			}
 			Push(c,stack);//入栈 
@@ -83,7 +91,7 @@ int main(){
 		
 	}
 		while(!Empty(stack)){
-			back +=stack.elements[stack.top];
+			back += char(Top(stack));
 			Pop(stack);//若栈非空的话 不断弹出剩余的栈内符号 
 		}
 	cout<<back<<endl;
@@ -94,9 +102,14 @@ int main(){
 	
 	//计算模块 
 	while(i<back.size()){
-		
-		if(c>='0'&&c<='9'){
+		if(c= ' ') continue;
+		if(isdigit(c)){
+			int num = 0;
+            while (i <back.size() && isdigit(back[i])){  // 读取连续数字字符
+                num = num * 10 + (back[i] - '0');  // 拼接成整数（如'1''2'→12）
+                i++;
 			Push(c,stack);//数字直接入栈 
+			}
 		}else {// 符号 栈顶两个元素运算并将结果压入栈中 
 			temp1=int(stack.elements[stack.top])-'0';
 			Pop(stack);
