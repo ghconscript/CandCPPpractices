@@ -46,6 +46,20 @@ int Priority(char op){
     if (op == '*' || op == '/') return 2;
     return 0;
 }
+void Display(STACK S){
+	int i;
+	for (i=S.top;i>0;i--){
+		if (S.elements[i] == '+') cout << "+ ";
+        else if (S.elements[i] == '-') cout << "- "<<endl;
+        else if (S.elements[i] == '*') cout << "* "<<endl;
+        else if (S.elements[i] == '/') cout << "/ "<<endl;
+        else if (S.elements[i] == '(') cout << "( "<<endl;
+		else if (S.elements[i] == ')') cout << ") "<<endl;
+		else cout << S.elements[i] << endl; 
+    }
+    cout<<"______"<<endl;
+	
+}
 int main(){
 	ifstream inFile;
 	inFile.open("data.txt");
@@ -71,22 +85,27 @@ int main(){
 			
 		}else if(c=='('){
 			Push(c,stack);//左括号入栈 
+			Display(stack);
 			
 		}else if(c==')'){
 			while(!Empty(stack)&&stack.elements[stack.top]!='('){
 				back += char(Top(stack));
-				back+=' ';
+				back +=' ';
 				Pop(stack);//不断弹出符号 直到遇到左括号 
+				Display(stack);
 			}
 			Pop(stack);//弹出左括号  但不加入back 
+			Display(stack);
 			
 		}else{
 			while(!Empty(stack)&&Priority(c)<=Priority(stack.elements[stack.top])){
 				back += char(Top(stack));
 				back += ' ';
-				Pop(stack);//如果栈顶符号优先级大于等于c 将栈顶运算符弹出输出 不断比较新的运算符直到入栈   
+				Pop(stack);//如果栈顶符号优先级大于等于c 将栈顶运算符弹出输出 不断比较新的运算符直到入栈
+				Display(stack);   
 			}
 			Push(c,stack);//入栈 
+			Display(stack);
 		}
 		
 	}
@@ -96,6 +115,7 @@ int main(){
 			back += char(Top(stack));
 			back +=' ';
 			Pop(stack);//若栈非空的话 不断弹出剩余的栈内符号 
+			Display(stack);
 		}
 	cout<<back<<endl;
 	
@@ -121,6 +141,7 @@ int main(){
                 i++;
             }
             Push(num, stack);
+            Display(stack);
         }
         else {  // 处理运算符
             // 确保栈中有足够的操作数
@@ -158,6 +179,7 @@ int main(){
             }
             
             Push(result, stack);  // 修改6：直接压入计算结果，不转换为字符
+            Display(stack);
             i++;
         }
     }
