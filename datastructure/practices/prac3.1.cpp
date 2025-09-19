@@ -24,18 +24,24 @@ int main(){
 	int len = sizeof(nums)/sizeof(nums[0]);
 	cin>>val;
 	for(i=0,j=0;i<len;){
-		cout<<nums[i]<<endl;
 		if (nums[i]!=val){
 			nums[j]=nums[i];
 			i++;
 			j++;
 		}
 		else{
-			k+=1;
 			i++;
 		}
 		
 		
 	}
+		cout<<"有效数量"<<j<<endl;
+		for(i=0;i<len;i++){
+			if(i<j)
+			cout<<nums[i];
+			else 
+			cout<<"_";
+			
+		} 
 	
 } 
