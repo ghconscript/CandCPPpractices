@@ -18,23 +18,23 @@ void DeleteRepeatElements(LIST& head){// 如果不修改头指针 传入LIST L也可以
 	position cur = head;
 	while (cur!=NULL&& cur->next!=NULL ){
 		if (cur->data ==cur->next->data){
-		position temp=cur->next;//记录最后一个重复节点 
-		while (temp->next!=NULL && temp->next->data == cur->data){
+			position temp=cur->next;//记录最后一个重复节点 
+			while (temp->next!=NULL && temp->next->data == cur->data){
 			temp = temp->next;
-		}
-		position toDelete = cur->next;//第一个重复的 
-		cur->next = temp->next;//修改指针的位置 跳过重复的Node 
-		while (toDelete != temp->next){
+			}
+			position toDelete = cur->next;//第一个重复的 
+			cur->next = temp->next;//修改指针的位置 跳过重复的Node 
+			while (toDelete != temp->next){
 			position nexttoDelete = toDelete->next;
 			delete toDelete;
 			toDelete = nexttoDelete;
-		
+			}
 		}
 		else{
 			cur = cur->next;
 		}
 	}
-	}
+	
 }
 void Reverse(LIST &head){
 	if (head==NULL||head->next==NULL)
