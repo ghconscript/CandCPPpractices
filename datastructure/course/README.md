@@ -1,0 +1,4 @@
+#2025-9-24 
++ LinkList 和 SeqList 是硬编码的测试用例
++ staticlinklist 是在豆包帮助下完成
++ 栈实现计算器 测试用例是data.txt
