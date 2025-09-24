@@ -23,9 +23,10 @@ void DeleteRepeatElements(LIST& head) { // 如果不修改头指针 传入LIST L也可以
 			while (temp->next!=NULL && temp->next->data == cur->data) {
 				temp = temp->next;
 			}
-			position toDelete = cur->next;//第一个重复的
+			position toDelete = cur->next;//重复的
 			cur->next = temp->next;//修改指针的位置 跳过重复的Node
-			while (toDelete != temp->next) {
+			position end = temp->next;
+			while (toDelete->data!= end->data) {
 				position nexttoDelete = toDelete->next;
 				delete toDelete;
 				toDelete = nexttoDelete;
@@ -39,7 +40,7 @@ void DeleteRepeatElements(LIST& head) { // 如果不修改头指针 传入LIST L也可以
 void Reverse(LIST &head) {
 	if (head==NULL||head->next==NULL)
 		return;
-	position cur=head;
+	position cur=head->next;
 	position nextTemp=NULL;
 	position prev=NULL;
 	while(cur!=NULL) {
@@ -48,7 +49,7 @@ void Reverse(LIST &head) {
 		prev=cur;//前驱指针后移一位
 		cur=nextTemp;//指针后移至暂存的后一位
 	}
-	head=prev;//循环结束更新头指针
+	head->next=prev;//循环结束更新头指针
 }
 void LeftForward(LIST &head,int k) {
 	/*
@@ -153,8 +154,8 @@ void destroyList(LIST &head) {
 	position temp = p;
 	while (p!=NULL) {
 		temp = p;
-		delete temp;
 		p=p->next;
+		delete temp;
 	}
 	head = NULL;
 }
