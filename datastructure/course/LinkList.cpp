@@ -36,7 +36,7 @@ void DeleteRepeatElements(LIST& head) { // 如果不修改头指针 传入LIST L也可以
 		}
 	}
 
-}k
+}
 void Reverse(LIST &head) {
 	if (head==NULL||head->next==NULL)
 		return;
