@@ -51,8 +51,7 @@ int main (){
 			results[j][1] = intervals[i][1];
 		}
 	} 
-	for(int i=0;i<=j;i++){
-		cout<<results[i][0]<<","<<results[i][1]<<endl;
-		
+	for (int i = 0; i <= j; i++) {
+		cout << "[" << results[i][0] << ", " << results[i][1] << "] ";
 	}
 } 
