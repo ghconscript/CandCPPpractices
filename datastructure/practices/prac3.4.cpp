@@ -24,6 +24,9 @@ bool isOverlap(int arr1[2],int arr2[2]){
 	}
 	else return false;
 }
+bool compare(const int *inter1,const int *inter2){
+	return inter1[0]<inter2[0];
+}
 
 void combine(int inter1[2],int inter2[2],int des[2]){
 	des[0]=min(inter1[0],inter2[0]);
@@ -32,11 +35,9 @@ void combine(int inter1[2],int inter2[2],int des[2]){
 int main (){
 	int intervals[][2]={{1,3},{2,6},{8,10},{15,18}};
 	int len = sizeof (intervals)/sizeof(intervals[0]);
-	int results[len][2];
+	int results[len][2]={0};
 	//¼ÙÉè°´ÕÕstartÉıĞòÅÅÁĞ
-	sort(intervals,intervals+len,[](const int (&a)[2],const int (&b)[2]){
-		return a[0]<b[0];
-	});
+	//sort(intervals,intervals+len,compare);
 	int i;
 	int j=0;
 	results[j][0] = intervals[0][0];
@@ -50,4 +51,8 @@ int main (){
 			results[j][1] = intervals[i][1];
 		}
 	} 
+	for(int i=0;i<=j;i++){
+		cout<<results[i][0]<<","<<results[i][1]<<endl;
+		
+	}
 } 
