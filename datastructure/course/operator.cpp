@@ -47,18 +47,22 @@ int Priority(char op){
     return 0;
 }
 void Display(STACK S){
-	int i;
-	for (i=S.top;i>0;i--){
-		if (S.elements[i] == '+') cout << "+ ";
-        else if (S.elements[i] == '-') cout << "- "<<endl;
-        else if (S.elements[i] == '*') cout << "* "<<endl;
-        else if (S.elements[i] == '/') cout << "/ "<<endl;
-        else if (S.elements[i] == '(') cout << "( "<<endl;
-		else if (S.elements[i] == ')') cout << ") "<<endl;
-		else cout << S.elements[i] << endl; 
-    }
-    cout<<"______"<<endl;
-	
+	cout << "栈状态：";
+	if (Empty(S)){
+		cout << "空";
+	} else {
+		for (int i = 0; i <= S.top; i++){  // 从栈底到栈顶（0到top）
+			int elem = S.elements[i];
+			// 区分运算符（字符）和数字
+			if (elem == '+' || elem == '-' || elem == '*' || elem == '/' || elem == '(' || elem == ')'){
+				cout << (char)elem;
+			} else {
+				cout << elem;
+			}
+			if (i != S.top) cout << " ";  // 元素间用空格分隔
+		}
+	}
+	cout << endl;  // 每个栈状态单独占一行
 }
 int main(){
 	ifstream inFile;
