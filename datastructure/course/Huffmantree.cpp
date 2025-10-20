@@ -15,10 +15,10 @@ typedef struct {
 	int n;//有效节点的数量
 } MinHeap;
 typedef HTNODE HuffmanT[NUM];//表示 “一个包含 51 个HTNODE元素的数组”。
-void InitHP(MinHeap M) {
+void InitHP(MinHeap &M) {//初始化堆
 	M.n = 0;
 }
-void Insert(MinHeap&heap, HTNODE N) {
+void Insert(MinHeap&heap, HTNODE &N) {
 	int i;
 	if (heap.n >= 52) {
 		cout << "full" << endl;
@@ -30,7 +30,9 @@ void Insert(MinHeap&heap, HTNODE N) {
 			i /= 2;
 		}
 		heap.data[i] = N;//将N插入指定位置
+		heap.n++;
 	}
+	
 }
 void InitHT(HuffmanT T) {
 	for (int i = 0; i <= NUM - 1; i++) {
@@ -44,19 +46,27 @@ void InputW(HuffmanT T, int cnt[]) {
 }
 void CreatHT(HuffmanT T, int cnt[]) {
 	int i, p1, p2;
-	InitHT(T);
-	InputW(T, cnt);
 }
-HTNODE DeleteMax(MinHeap &heap){//见课件的P121
+HTNODE DeleteMin(MinHeap &heap){//见课件的P121
 	int parent =1 ,child=2;
 	HTNODE elem,tmp;
 	if(heap.n!=0){
 		elem = heap.data[1];
-		tmp=heap.data[heap.n--];
+		tmp=heap.data[heap.n--];//取出最后一个数 存入tmp再删除之
 		while(child<=heap.n){
-			
+			if((child<heap.n)&&(heap.data[child].weight>heap.data[child+1].weight)){
+				child ++;//找孩子的小者
+			}
+			if(tmp.weight<=heap.data[child].weight){
+				break;//若tmp小于当前子节点child的值 就可以把tmp放入现在的这个parent
+			}
+			//如果tmp大于这个数字 就需要将较小子节点的值上移到parent的位置 child移动到新paren的左孩子
+			heap.data[parent]=heap.data[child];
+			parent=child;
+			child*=2;
 		}
-		
+		heap.data[parent]=tmp;
+		return elem;
 	}
 	
 }
@@ -83,5 +93,15 @@ int main() {
 			total++;
 		}
 	}
+	HuffmanT T;MinHeap H;
+	InitHT(T);
+	InitHP(H);
+	InputW(T,cnt);
+	for(int i=0;i<=NUM-1;i++){
+		Insert(H,T[i]);//建立了最小堆
+	}
+
+	
+	
 
 }
