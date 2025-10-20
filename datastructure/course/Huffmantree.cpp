@@ -1,7 +1,8 @@
 #include<iostream>
 #include<fstream>
-#include<string>
+#include<string.h>
 #define NUM 52
+#define MAXPATH 6
 using namespace std;
 //把所有节点依次建立 然后建立一个最小堆 建立最小堆后 依次把最小堆堆顶元素提取出来作为Huffman树的最小节点
 typedef struct {
@@ -32,7 +33,7 @@ void Insert(MinHeap&heap, HTNODE &N) {
 		heap.data[i] = N;//将N插入指定位置
 		heap.n++;
 	}
-	
+
 }
 void InitHT(HuffmanT T) {
 	for (int i = 0; i <= NUM - 1; i++) {
@@ -44,34 +45,76 @@ void InputW(HuffmanT T, int cnt[]) {
 		T[i].weight = cnt[i];
 	}
 }
-void CreatHT(HuffmanT T, int cnt[]) {
-	int i, p1, p2;
-}
-HTNODE DeleteMin(MinHeap &heap){//见课件的P121
-	int parent =1 ,child=2;
-	HTNODE elem,tmp;
-	if(heap.n!=0){
+HTNODE DeleteMin(MinHeap &heap) { //见课件的P121
+	int parent = 1, child = 2;
+	HTNODE elem, tmp;
+	if (heap.n != 0) {
 		elem = heap.data[1];
-		tmp=heap.data[heap.n--];//取出最后一个数 存入tmp再删除之
-		while(child<=heap.n){
-			if((child<heap.n)&&(heap.data[child].weight>heap.data[child+1].weight)){
+		tmp = heap.data[heap.n--]; //取出最后一个数 存入tmp再删除之
+		while (child <= heap.n) {
+			if ((child < heap.n) && (heap.data[child].weight > heap.data[child + 1].weight)) {
 				child ++;//找孩子的小者
 			}
-			if(tmp.weight<=heap.data[child].weight){
+			if (tmp.weight <= heap.data[child].weight) {
 				break;//若tmp小于当前子节点child的值 就可以把tmp放入现在的这个parent
 			}
 			//如果tmp大于这个数字 就需要将较小子节点的值上移到parent的位置 child移动到新paren的左孩子
-			heap.data[parent]=heap.data[child];
-			parent=child;
-			child*=2;
+			heap.data[parent] = heap.data[child];
+			parent = child;
+			child *= 2;
 		}
-		heap.data[parent]=tmp;
+		heap.data[parent] = tmp;
 		return elem;
 	}
-	
 }
-void SelectMin(HuffmanT T){
-	
+void CreatHT(HuffmanT T, int cnt[]) {
+	int p1, p2;
+	MinHeap H;
+	InitHT(T);
+	InitHP(H);
+	InputW(T, cnt);
+	for (int i = 0; i <= NUM - 1; i++) {
+		Insert(H, T[i]);
+		//建立最小堆
+	}
+	for (int i = H.n; i < 2 * (H.n) -1; i++) {
+		p1 = DeleteMin(H).weight;
+		p2 = DeleteMin(H).weight;
+		T[p1].parent = i;
+		T[p2].parent = i;
+		T[i].lchild = p1;
+		T[i].lchild = p2;
+		T[i].weight = T[p1].weight + T[p2].weight;
+		Insert(H, T[i]);
+	}
+
+}
+char** Code(HuffmanT T) {
+	int cur, parent;
+	char path[MAXPATH];
+	char code[MAXPATH];
+	int len = 0;
+	char** codes = (char**)malloc(NUM * sizeof(char*));
+	for (int i = 0; i < NUM; i++) {
+		cur = i;
+		parent = T[cur].parent;
+		while(parent != 1){
+			if(T[parent].lchild==cur){
+				path[len++]='0';
+			}else{
+				path[len++]='1';
+			}
+			cur = parent;
+			parent = T[cur].parent;
+		}
+		for (int j = 0; j < len; j++) {
+			code[j] = path[len - 1 - j];  // 反转
+		}
+		code[len] = '\0';  // 字符串结束符
+		codes[i]=(char*)malloc((len+1)*sizeof(char));
+		strcpy(codes[i],code);
+	}	
+	return codes;
 }
 int main() {
 	ifstream inFile;
@@ -93,15 +136,12 @@ int main() {
 			total++;
 		}
 	}
-	HuffmanT T;MinHeap H;
-	InitHT(T);
-	InitHP(H);
-	InputW(T,cnt);
-	for(int i=0;i<=NUM-1;i++){
-		Insert(H,T[i]);//建立了最小堆
+	HuffmanT T;//节点数组
+	CreatHT(T, cnt);
+	for(int i=0;i<=NUM;i++){
+		cout<<Code(T)<<endl;
 	}
 
-	
-	
+
 
 }
