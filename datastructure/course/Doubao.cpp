@@ -2,7 +2,7 @@
 #include<fstream>
 #include<string.h>
 #include<cmath>
-#define NUM 128       // 最大不同字符数(覆盖ASCII码)
+#define NUM 70        // 最大节点数
 #define MAXCODE 100   // 最大编码长度
 using namespace std;
 
@@ -14,7 +14,7 @@ typedef struct {
 	int parent;       // 父节点索引
 } HTNODE;
 
-// 最小堆节点结构(存储哈夫曼树节点的索引和权重)
+// 最小堆节点结构
 typedef struct {
 	int index;        // 哈夫曼树节点的索引
 	double weight;    // 权重
@@ -22,23 +22,87 @@ typedef struct {
 
 // 最小堆结构
 typedef struct {
-	MinHeapNode data[NUM];  // 堆数据
-	int n;                  // 堆中元素数量
+	MinHeapNode data[NUM + 1];  // 1-based索引
+	int n;                      // 堆中元素数量
 } MinHeap;
 
-// 哈夫曼树类型(节点数组)
-typedef HTNODE HuffmanT[2*NUM-1];
+// 哈夫曼树类型
+typedef HTNODE HuffmanT[2 * NUM - 1];  // 总节点数=2*叶子数-1
+
+
+// 堆初始化函数
+void InitHP(MinHeap& M) {
+	M.n = 0;  // 堆大小初始化为0(1-based索引，data[1..n]有效)
+}
+
+// 堆插入函数
+void Insert(MinHeap& heap, int index, double weight) {
+	if (heap.n >= NUM) {
+		cout << "堆已满" << endl;
+		return;
+	} else {
+		int i = ++heap.n;  // 新元素位置(1-based)
+		// 向上调整：与父节点比较，若更小则交换
+		while ((i != 1) && (weight < heap.data[i / 2].weight)) {
+			heap.data[i] = heap.data[i / 2];  // 父节点下移
+			i /= 2;
+		}
+		heap.data[i] = {index, weight};  // 插入新元素
+	}
+}
+
+// 哈夫曼树初始化函数
+void InitHT(HuffmanT T) {
+	for (int i = 0; i <= 2 * NUM - 2; i++) {  // 初始化所有可能节点
+		T[i] = {0, -1, -1, -1};  // 权重0，无孩子和父节点
+	}
+}
+
+// 哈夫曼树权重设置函数
+void InputW(HuffmanT T, int cnt[]) {
+	for (int i = 0; i < NUM; i++) {  // 为前NUM个节点设置权重(叶子节点)
+		T[i].weight = cnt[i];
+	}
+}
+
+// 堆删除最小元素函数
+int DeleteMin(MinHeap& heap) {
+	int parent = 1, child = 2;
+	int min_idx = heap.data[1].index;  // 堆顶是最小元素，记录其索引
+	if (heap.n != 0) {
+		MinHeapNode tmp = heap.data[heap.n--];  // 取最后一个元素，堆大小减1
+		// 向下调整：找到tmp的正确位置
+		while (child <= heap.n) {
+			// 选择左右孩子中较小的一个
+			if ((child < heap.n) && (heap.data[child].weight > heap.data[child + 1].weight)) {
+				child++;
+			}
+			// 若tmp小于等于子节点，无需继续下移
+			if (tmp.weight <= heap.data[child].weight) {
+				break;
+			}
+			// 子节点上移
+			heap.data[parent] = heap.data[child];
+			parent = child;
+			child *= 2;  // 移动到左孩子
+		}
+		heap.data[parent] = tmp;  // 放置tmp
+		return min_idx;  // 返回最小元素的索引
+	}
+	return -1;  // 堆为空
+}
+
 
 /**
- * 统计文件中各字符的出现频率
- * @param filename 输入文件名
- * @param count 频率计数数组
- * @param total 总字符数
- * @param m 不同字符的数量
- * @param chars 存储不同字符的数组
+ * 统计文件字符频率
+ * @param filename 输入文件
+ * @param chars 存储有效字符(非零频率)
+ * @param cnt 频率数组(下标对应ASCII，值为出现次数)
+ * @param m 有效字符数量(输出)
+ * @param total 总字符数(输出)
  */
-void countFrequency(const char* filename, int count[], int& total, int& m, char chars[]) {
-	memset(count, 0, sizeof(int)*128);
+void CountCharFrequency(const char* filename, char chars[], int cnt[], int& m, int& total) {
+	memset(cnt, 0, sizeof(int) * 128);  // 初始化频率数组
 	total = 0;
 	m = 0;
 	
@@ -49,104 +113,21 @@ void countFrequency(const char* filename, int count[], int& total, int& m, char 
 	}
 	
 	char c;
-	while (fin.get(c)) {  // 逐个读取字符(包括所有ASCII字符)
-		count[(unsigned char)c]++;  // 处理无符号字符
+	while (fin.get(c)) {  // 读取所有字符(包括控制字符)
+		unsigned char uc = (unsigned char)c;
+		cnt[uc]++;
 		total++;
 	}
 	fin.close();
 	
-	// 收集所有出现过的字符
+	// 提取有效字符(频率>0)，最多NUM个
 	for (int i = 0; i < 128; i++) {
-		if (count[i] > 0) {
+		if (cnt[i] > 0) {
 			chars[m++] = (char)i;
-		}
-	}
-}
-
-/**
- * 最小堆的向下调整操作
- * @param heap 最小堆
- * @param i 要调整的节点索引
- */
-void adjustHeap(MinHeap& heap, int i) {
-	int left = 2 * i + 1;
-	int right = 2 * i + 2;
-	int smallest = i;
-	
-	// 找到当前节点、左孩子、右孩子中的最小值
-	if (left < heap.n && heap.data[left].weight < heap.data[smallest].weight)
-		smallest = left;
-	if (right < heap.n && heap.data[right].weight < heap.data[smallest].weight)
-		smallest = right;
-	
-	// 如果最小值不是当前节点，交换并递归调整
-	if (smallest != i) {
-		swap(heap.data[i], heap.data[smallest]);
-		adjustHeap(heap, smallest);
-	}
-}
-
-/**
- * 初始化最小堆
- * @param heap 最小堆
- * @param ht 哈夫曼树
- * @param m 叶子节点数量
- */
-void initMinHeap(MinHeap& heap, HuffmanT ht, int m) {
-	heap.n = m;
-	for (int i = 0; i < m; i++) {
-		heap.data[i].index = i;
-		heap.data[i].weight = ht[i].weight;
-	}
-	// 从最后一个非叶子节点开始构建堆
-	for (int i = (heap.n - 2) / 2; i >= 0; i--) {
-		adjustHeap(heap, i);
-	}
-}
-
-/**
- * 提取堆中最小元素
- * @param heap 最小堆
- * @return 最小堆节点
- */
-MinHeapNode extractMin(MinHeap& heap) {
-	if (heap.n <= 0) {
-		cerr << "堆为空，无法提取元素" << endl;
-		exit(1);
-	}
-	
-	MinHeapNode minNode = heap.data[0];
-	heap.data[0] = heap.data[heap.n - 1];  // 用最后一个元素替换堆顶
-	heap.n--;
-	adjustHeap(heap, 0);  // 调整堆
-	
-	return minNode;
-}
-
-/**
- * 向堆中插入节点
- * @param heap 最小堆
- * @param node 要插入的节点
- */
-void insertHeap(MinHeap& heap, MinHeapNode node) {
-	if (heap.n >= NUM) {
-		cerr << "堆已满，无法插入" << endl;
-		exit(1);
-	}
-	
-	// 插入到堆的末尾
-	int i = heap.n;
-	heap.data[i] = node;
-	heap.n++;
-	
-	// 向上调整堆
-	while (i > 0) {
-		int parent = (i - 1) / 2;
-		if (heap.data[i].weight < heap.data[parent].weight) {
-			swap(heap.data[i], heap.data[parent]);
-			i = parent;
-		} else {
-			break;
+			if (m > NUM) {  // 不超过NUM
+				cerr << "字符种类超过上限(" << NUM << ")" << endl;
+				exit(1);
+			}
 		}
 	}
 }
@@ -154,379 +135,291 @@ void insertHeap(MinHeap& heap, MinHeapNode node) {
 /**
  * 构建哈夫曼树
  * @param ht 哈夫曼树
- * @param heap 最小堆
- * @param m 叶子节点数量
+ * @param cnt 频率数组
+ * @param m 有效字符数量(叶子节点数)
+ * @param chars 有效字符数组（新增参数）
  */
-void buildHuffmanTree(HuffmanT ht, MinHeap& heap, int m) {
-	// 初始化非叶子节点
-	for (int i = m; i < 2 * m - 1; i++) {
-		ht[i].weight = 0;
-		ht[i].lchild = -1;
-		ht[i].rchild = -1;
-		ht[i].parent = -1;
+void BuildHuffmanTree(HuffmanT ht, int cnt[], int m, const char chars[]) {  // 新增chars参数
+	// 1. 初始化哈夫曼树
+	InitHT(ht);
+	// 2. 设置叶子节点权重
+	InputW(ht, cnt);
+	
+	// 3. 初始化最小堆
+	MinHeap heap;
+	InitHP(heap);
+	
+	// 4. 将有效叶子节点插入堆
+	for (int i = 0; i < m; i++) {
+		// 使用传入的chars数组获取字符，计算权重
+		ht[i].weight = cnt[(unsigned char)chars[i]];  // 现在可以正确访问chars
+		Insert(heap, i, ht[i].weight);
 	}
 	
-	// 合并m-1次创建非叶子节点
-	for (int i = m; i < 2 * m - 1; i++) {
-		MinHeapNode s1 = extractMin(heap);  // 提取第一个最小节点
-		MinHeapNode s2 = extractMin(heap);  // 提取第二个最小节点
+	// 5. 合并节点构建哈夫曼树
+	for (int i = m; i < 2 * m - 1; i++) {  // 新节点索引从m开始
+		// 提取两个最小权重节点
+		int i1 = DeleteMin(heap);
+		int i2 = DeleteMin(heap);
 		
-		int i1 = s1.index;
-		int i2 = s2.index;
-		
-		// 创建新节点
-		ht[i].weight = s1.weight + s2.weight;
+		// 设置新节点的左右孩子和权重
 		ht[i].lchild = i1;
 		ht[i].rchild = i2;
+		ht[i].weight = ht[i1].weight + ht[i2].weight;
+		
+		// 设置孩子节点的父节点
 		ht[i1].parent = i;
 		ht[i2].parent = i;
 		
 		// 将新节点插入堆
-		MinHeapNode newNode = {i, ht[i].weight};
-		insertHeap(heap, newNode);
+		Insert(heap, i, ht[i].weight);
 	}
 }
 
 /**
- * 生成哈夫曼编码
+ * 生成哈夫曼编码表
  * @param ht 哈夫曼树
- * @param m 叶子节点数量
- * @param chars 字符数组
- * @param code 存储编码的二维数组
+ * @param m 有效字符数量
+ * @param chars 有效字符数组
+ * @param codes 编码表(输出)
  */
-void generateHuffmanCode(HuffmanT ht, int m, const char chars[], char code[128][MAXCODE]) {
-	for (int i = 0; i < m; i++) {
-		char temp[MAXCODE];
-		int current = i;
-		int parent = ht[current].parent;
-		int index = 0;
+void GenerateCodes(HuffmanT ht, int m, const char chars[], string codes[]) {
+	for (int i = 0; i < m; i++) {  // 遍历每个叶子节点(对应chars[i])
+		int cur = i;  // 当前节点索引(叶子节点索引0..m-1)
+		int parent = ht[cur].parent;
+		string code;
 		
 		// 从叶子节点向上追溯到根节点
 		while (parent != -1) {
-			if (ht[parent].lchild == current) {
-				temp[index++] = '0';  // 左孩子为0
+			if (ht[parent].lchild == cur) {
+				code = "0" + code;  // 左孩子编码为0
 			} else {
-				temp[index++] = '1';  // 右孩子为1
+				code = "1" + code;  // 右孩子编码为1
 			}
-			current = parent;
-			parent = ht[current].parent;
+			cur = parent;
+			parent = ht[cur].parent;
 		}
-		temp[index] = '\0';
-		
-		// 反转临时数组得到正确编码
-		int len = strlen(temp);
-		for (int j = 0; j < len; j++) {
-			code[(unsigned char)chars[i]][j] = temp[len - 1 - j];
-		}
-		code[(unsigned char)chars[i]][len] = '\0';
+		codes[i] = code;  // 保存编码
 	}
 }
 
 /**
- * 对文件进行哈夫曼编码(压缩)
- * @param srcFile 源文件
- * @param dstFile 压缩文件
- * @param code 哈夫曼编码表
- * @param chars 字符数组
- * @param m 字符数量
- * @param count 频率计数
- * @return 编码成功返回true
+ * 压缩文件(哈夫曼编码)
  */
-bool encodeFile(const char* srcFile, const char* dstFile, 
-				const char code[128][MAXCODE], const char chars[], int m, int count[]) {
-	ofstream fout(dstFile, ios::binary);
-	ifstream fin(srcFile, ios::binary);
+void Encode(const char* src, const char* dst, const char chars[], const string codes[], int m, int cnt[]) {
+	ofstream fout(dst, ios::binary);
+	ifstream fin(src, ios::binary);
 	if (!fout || !fin) {
 		cerr << "文件打开失败" << endl;
-		return false;
+		exit(1);
 	}
 	
-	// 写入头部信息：字符数量
+	// 写入头信息
 	fout.write((char*)&m, sizeof(int));
-	
-	// 写入每个字符及其出现次数
 	for (int i = 0; i < m; i++) {
-		char c = chars[i];
-		int cnt = count[(unsigned char)c];
-		fout.write(&c, sizeof(char));
-		fout.write((char*)&cnt, sizeof(int));
+		unsigned char c = (unsigned char)chars[i];
+		int freq = cnt[c];
+		fout.write((char*)&c, sizeof(unsigned char));
+		fout.write((char*)&freq, sizeof(int));
 	}
 	
-	// 编码字符并写入
-	char bitBuffer[8];
-	int bitCount = 0;
-	char c;
+	// 编码数据
+	char bitBuf = 0;  // 位缓冲区(8位)
+	int bitCnt = 0;   // 已缓存位数
 	
-	while (fin.get(c)) {
-		const char* codestr = code[(unsigned char)c];
-		int len = strlen(codestr);
+	char c;
+	while (fin.get(c)) {  // 读取源文件字符
+		unsigned char uc = (unsigned char)c;
+		// 查找字符在chars中的索引
+		int idx = -1;
+		for (int i = 0; i < m; i++) {
+			if ((unsigned char)chars[i] == uc) {
+				idx = i;
+				break;
+			}
+		}
+		if (idx == -1) {
+			cerr << "编码错误：未找到字符" << endl;
+			exit(1);
+		}
 		
-		// 处理每个编码位
-		for (int i = 0; i < len; i++) {
-			bitBuffer[bitCount++] = codestr[i];
-			if (bitCount == 8) {  // 满8位则转换为字节写入
-				unsigned char byte = 0;
-				for (int j = 0; j < 8; j++) {
-					byte = (byte << 1) | (bitBuffer[j] == '1' ? 1 : 0);
-				}
-				fout.write((char*)&byte, sizeof(unsigned char));
-				bitCount = 0;
+		// 处理该字符的编码
+		const string& code = codes[idx];
+		for (char bit : code) {
+			bitBuf = (bitBuf << 1) | (bit == '1' ? 1 : 0);  // 左移补位
+			bitCnt++;
+			if (bitCnt == 8) {  // 缓冲区满，写入
+				fout.put(bitBuf);
+				bitBuf = 0;
+				bitCnt = 0;
 			}
 		}
 	}
 	
-	// 处理剩余的位
-	unsigned char lastByte = 0;
-	int remainingBits = bitCount;
-	if (remainingBits > 0) {
-		for (int j = 0; j < remainingBits; j++) {
-			lastByte = (lastByte << 1) | (bitBuffer[j] == '1' ? 1 : 0);
-		}
-		lastByte <<= (8 - remainingBits);  // 填充剩余位
-		fout.write((char*)&lastByte, sizeof(unsigned char));
+	// 处理剩余不足8位的比特
+	if (bitCnt > 0) {
+		bitBuf <<= (8 - bitCnt);  // 左移补0
+		fout.put(bitBuf);
 	}
-	
 	// 写入最后一个字节的有效位数
-	fout.write((char*)&remainingBits, sizeof(char));
+	fout.put((char)bitCnt);
 	
 	fin.close();
 	fout.close();
-	return true;
 }
 
 /**
- * 获取文件大小(字节)
- * @param filename 文件名
- * @return 文件大小
+ * 解压文件(哈夫曼译码)
  */
-long long getFileSize(const char* filename) {
-	ifstream fin(filename, ios::binary | ios::ate);
-	if (!fin) {
-		cerr << "无法获取文件大小: " << filename << endl;
-		return -1;
+void Decode(const char* src, const char* dst) {
+	ifstream fin(src, ios::binary);
+	ofstream fout(dst, ios::binary);
+	if (!fin || !fout) {
+		cerr << "文件打开失败" << endl;
+		exit(1);
 	}
-	long long size = fin.tellg();
+	
+	// 读取头信息：有效字符数m
+	int m, total = 0;
+	fin.read((char*)&m, sizeof(int));
+	if (m <= 0 || m > NUM) {
+		cerr << "压缩文件格式错误" << endl;
+		exit(1);
+	}
+	
+	// 读取字符和频率，重建chars、cnt数组
+	char chars[NUM];
+	int cnt[128] = {0};
+	for (int i = 0; i < m; i++) {
+		unsigned char c;
+		int freq;
+		fin.read((char*)&c, sizeof(unsigned char));
+		fin.read((char*)&freq, sizeof(int));
+		chars[i] = (char)c;
+		cnt[c] = freq;
+		total += freq;
+	}
+	
+	// 重建哈夫曼树（传入chars参数）
+	HuffmanT ht;
+	BuildHuffmanTree(ht, cnt, m, chars);  // 新增chars实参
+	int root = 2 * m - 2;  // 根节点索引(最后一个节点)
+	
+	// 读取编码数据大小和最后一个字节的有效位数
+	long long fileSize = fin.tellg();
+	fin.seekg(0, ios::end);
+	long long totalSize = fin.tellg();
+	char lastBitCnt;
+	fin.seekg(-1, ios::end);
+	fin.read(&lastBitCnt, 1);
+	long long codeSize = totalSize - fileSize - 1;  // 编码数据字节数
+	
+	// 定位到编码数据开始处
+	fin.seekg(fileSize, ios::beg);
+	
+	// 译码过程
+	int curNode = root;  // 从根节点开始
+	unsigned char byte;
+	long long bytesRead = 0;
+	
+	while (bytesRead < codeSize) {
+		fin.read((char*)&byte, 1);
+		bytesRead++;
+		
+		// 确定当前字节需要处理的位数(最后一个字节特殊处理)
+		int bitsToProcess = (bytesRead == codeSize) ? lastBitCnt : 8;
+		for (int i = 7; i >= (8 - bitsToProcess); i--) {  // 从高位到低位
+			int bit = (byte >> i) & 1;  // 提取第i位
+			// 移动到子节点：0->左孩子，1->右孩子
+			curNode = (bit == 0) ? ht[curNode].lchild : ht[curNode].rchild;
+			
+			// 到达叶子节点，输出对应字符
+			if (ht[curNode].lchild == -1 && ht[curNode].rchild == -1) {
+				fout.put(chars[curNode]);  // 叶子节点索引对应chars的索引
+				curNode = root;  // 回到根节点
+			}
+		}
+	}
+	
 	fin.close();
-	return size;
+	fout.close();
 }
 
 /**
  * 计算压缩率
- * @param original 原文件
- * @param compressed 压缩文件
- * @return 压缩率(百分比)
  */
-double calculateCompressionRate(const char* original, const char* compressed) {
-	long long origSize = getFileSize(original);
-	long long compSize = getFileSize(compressed);
+double GetCompressionRate(const char* orig, const char* comp) {
+	ifstream finOrig(orig, ios::binary | ios::ate);
+	ifstream finComp(comp, ios::binary | ios::ate);
+	if (!finOrig || !finComp) return -1.0;
 	
-	if (origSize <= 0 || compSize <= 0) return -1.0;
-	return (double)compSize / origSize * 100;
+	long long origSize = finOrig.tellg();
+	long long compSize = finComp.tellg();
+	return (origSize == 0) ? 0.0 : (double)compSize / origSize * 100;
 }
 
 /**
- * 从压缩文件读取频率信息
- * @param filename 压缩文件名
- * @param count 频率计数数组
- * @param m 字符数量
- * @param chars 字符数组
- * @param total 总字符数
+ * 比较两个文件是否一致
  */
-void readFrequencyFromCompressed(const char* filename, int count[], int& m, char chars[], int& total) {
-	ifstream fin(filename, ios::binary);
-	if (!fin) {
-		cerr << "无法打开压缩文件: " << filename << endl;
-		exit(1);
-	}
-	
-	memset(count, 0, sizeof(int)*128);
-	total = 0;
-	
-	// 读取字符数量
-	fin.read((char*)&m, sizeof(int));
-	
-	// 读取每个字符及其计数
-	for (int i = 0; i < m; i++) {
-		char c;
-		int cnt;
-		fin.read(&c, sizeof(char));
-		fin.read((char*)&cnt, sizeof(int));
-		chars[i] = c;
-		count[(unsigned char)c] = cnt;
-		total += cnt;
-	}
-	fin.close();
-}
-
-/**
- * 对压缩文件进行译码(解压)
- * @param srcFile 压缩文件
- * @param dstFile 解压文件
- * @return 译码成功返回true
- */
-bool decodeFile(const char* srcFile, const char* dstFile) {
-	// 读取频率信息
-	int count[128], m, total;
-	char chars[NUM];
-	readFrequencyFromCompressed(srcFile, count, m, chars, total);
-	
-	// 重建哈夫曼树
-	HuffmanT ht;
-	for (int i = 0; i < m; i++) {
-		ht[i].weight = count[(unsigned char)chars[i]] / (double)total;
-		ht[i].lchild = ht[i].rchild = ht[i].parent = -1;
-	}
-	
-	MinHeap heap;
-	initMinHeap(heap, ht, m);
-	buildHuffmanTree(ht, heap, m);
-	int root = 2 * m - 2;  // 根节点索引
-	
-	// 读取编码数据
-	ifstream fin(srcFile, ios::binary);
-	ofstream fout(dstFile, ios::binary);
-	if (!fin || !fout) {
-		cerr << "译码文件打开失败" << endl;
-		return false;
-	}
-	
-	// 定位到编码数据开始位置
-	fin.seekg(4 + 5 * m, ios::beg);  // 4字节(m) + m*(1+4)字节(字符+计数)
-	
-	// 读取最后一个字节的有效位数
-	char remainingBits;
-	fin.seekg(-sizeof(char), ios::end);
-	fin.read(&remainingBits, sizeof(char));
-	
-	// 计算编码数据大小
-	long long totalSize = getFileSize(srcFile);
-	long long codeSize = totalSize - (4 + 5 * m) - 1;
-	if (codeSize < 0) {
-		cerr << "压缩文件格式错误" << endl;
-		return false;
-	}
-	
-	// 读取编码字节
-	fin.seekg(4 + 5 * m, ios::beg);
-	unsigned char* codeBytes = new unsigned char[codeSize];
-	fin.read((char*)codeBytes, codeSize);
-	
-	// 译码过程
-	int currentNode = root;
-	int totalBits = codeSize * 8;
-	if (codeSize > 0) totalBits -= (8 - remainingBits);
-	
-	int bitIndex = 0;
-	for (int i = 0; i < codeSize; i++) {
-		unsigned char byte = codeBytes[i];
-		for (int j = 7; j >= 0; j--) {  // 从高位到低位处理
-			if (bitIndex >= totalBits) break;
-			
-			int bit = (byte >> j) & 1;
-			// 根据bit移动到相应子节点
-			currentNode = (bit == 0) ? ht[currentNode].lchild : ht[currentNode].rchild;
-			
-			// 到达叶子节点，输出字符
-			if (ht[currentNode].lchild == -1 && ht[currentNode].rchild == -1) {
-				for (int k = 0; k < m; k++) {
-					if (k == currentNode) {
-						fout.put(chars[k]);
-						break;
-					}
-				}
-				currentNode = root;  // 回到根节点
-			}
-			bitIndex++;
-		}
-		if (bitIndex >= totalBits) break;
-	}
-	
-	delete[] codeBytes;
-	fin.close();
-	fout.close();
-	return true;
-}
-
-/**
- * 比较两个文件是否完全相同
- * @param file1 第一个文件
- * @param file2 第二个文件
- * @return 相同返回true
- */
-bool compareFiles(const char* file1, const char* file2) {
-	ifstream fin1(file1, ios::binary);
-	ifstream fin2(file2, ios::binary);
+bool Compare(const char* f1, const char* f2) {
+	ifstream fin1(f1, ios::binary);
+	ifstream fin2(f2, ios::binary);
 	if (!fin1 || !fin2) return false;
 	
 	char c1, c2;
 	while (fin1.get(c1) && fin2.get(c2)) {
 		if (c1 != c2) return false;
 	}
-	
-	// 检查是否都到达文件末尾
-	return fin1.eof() && fin2.eof();
+	return fin1.eof() && fin2.eof();  // 必须都到达文件末尾
 }
 
+// 全局变量：存储有效字符
+char chars[NUM];
+
 int main() {
-	const char* originalFile = "original.txt";    // 原文件
-	const char* compressedFile = "compressed.bin";// 压缩文件
-	const char* decodedFile = "decoded.txt";      // 解压文件
+	const char* origFile = "source.txt";    // 原文件
+	const char* compFile = "compressed.bin";// 压缩文件
+	const char* decoFile = "decoded.txt";   // 解压文件
 	
-	int count[128], totalChars, m;
-	char chars[NUM];
-	char code[128][MAXCODE] = {0};
+	int cnt[128] = {0};  // 频率数组(ASCII范围)
+	int m;               // 有效字符种类
+	int totalChars;      // 总字符数
+	string codes[NUM];   // 哈夫曼编码表
 	
 	// 1. 统计字符频率
-	countFrequency(originalFile, count, totalChars, m, chars);
-	cout << "1. 字符频率统计完成" << endl;
-	cout << "   不同字符数: " << m << ", 总字符数: " << totalChars << endl;
+	CountCharFrequency(origFile, chars, cnt, m, totalChars);
+	cout << "1. 字符频率统计完成：" << m << "种字符，共" << totalChars << "个字符" << endl;
 	
-	// 2. 构建哈夫曼树
+	// 2. 构建哈夫曼树（传入chars参数）
 	HuffmanT ht;
-	for (int i = 0; i < m; i++) {
-		ht[i].weight = count[(unsigned char)chars[i]] / (double)totalChars;
-		ht[i].lchild = ht[i].rchild = ht[i].parent = -1;
-	}
-	MinHeap heap;
-	initMinHeap(heap, ht, m);
-	buildHuffmanTree(ht, heap, m);
+	BuildHuffmanTree(ht, cnt, m, chars);  // 新增chars实参
 	cout << "2. 哈夫曼树构建完成" << endl;
 	
-	// 3. 生成哈夫曼编码并显示
-	generateHuffmanCode(ht, m, chars, code);
-	cout << "3. 哈夫曼编码生成完成" << endl;
-	cout << "   编码表如下:" << endl;
+	// 3. 生成哈夫曼编码表
+	GenerateCodes(ht, m, chars, codes);
+	cout << "3. 哈夫曼编码表：" << endl;
 	for (int i = 0; i < m; i++) {
 		char c = chars[i];
-		cout << "   '";
-		if (c == ' ') cout << "空格";
-		else if (c == '\n') cout << "换行";
-		else if (c == '\t') cout << "制表";
-		else cout << c;
-		cout << "': " << code[(unsigned char)c] << endl;
+		cout << "   '" << (c == ' ' ? "空格" : (c == '\n' ? "换行" : string(1, c))) << "': " << codes[i] << endl;
 	}
 	
-	// 4. 编码文件(压缩)
-	if (encodeFile(originalFile, compressedFile, code, chars, m, count)) {
-		cout << "4. 文件压缩完成，保存为: " << compressedFile << endl;
-	}
+	// 4. 压缩文件
+	Encode(origFile, compFile, chars, codes, m, cnt);
+	cout << "4. 压缩完成，保存为" << compFile << endl;
 	
 	// 5. 计算压缩率
-	double rate = calculateCompressionRate(originalFile, compressedFile);
-	if (rate >= 0) {
-		cout << "5. 压缩率: " << rate << "%" << endl;
-	}
+	double rate = GetCompressionRate(origFile, compFile);
+	cout << "5. 压缩率：" << rate << "%" << endl;
 	
-	// 6. 译码文件(解压)
-	if (decodeFile(compressedFile, decodedFile)) {
-		cout << "6. 文件解压完成，保存为: " << decodedFile << endl;
-	}
+	// 6. 解压文件
+	Decode(compFile, decoFile);
+	cout << "6. 解压完成，保存为" << decoFile << endl;
 	
-	// 7. 比较原文件与解压文件
-	if (compareFiles(originalFile, decodedFile)) {
-		cout << "7. 验证结果: 原文件与解压文件完全一致，压缩解压成功!" << endl;
+	// 7. 验证正确性
+	if (Compare(origFile, decoFile)) {
+		cout << "7. 验证成功：原文件与解压文件完全一致" << endl;
 	} else {
-		cout << "7. 验证结果: 原文件与解压文件不一致，出现错误!" << endl;
+		cout << "7. 验证失败：文件不一致" << endl;
 	}
 	
 	return 0;

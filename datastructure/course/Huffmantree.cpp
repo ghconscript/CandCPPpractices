@@ -3,7 +3,7 @@
 #include<string.h>
 #define NUM 70
 #define MAXPATH 7
-#define MAX 500
+#define MAXCODE 100
 using namespace std;
 //把所有节点依次建立 然后建立一个最小堆 建立最小堆后 依次把最小堆堆顶元素提取出来作为Huffman树的最小节点
 typedef struct {
@@ -25,6 +25,31 @@ typedef struct{
 	int n;
 }MinHeap;
 typedef HTNODE HuffmanT[2*NUM-1];
+void countFrequency(const char* filename, int count[], int& total, int& m, char chars[]) {
+	memset(count, 0, sizeof(int)*128);
+	total = 0;
+	m = 0;
+	
+	ifstream fin(filename, ios::binary);
+	if (!fin) {
+		cerr << "无法打开文件: " << filename << endl;
+		exit(1);
+	}
+	
+	char c;
+	while (fin.get(c)) {  // 逐个读取字符(包括所有ASCII字符)
+		count[(unsigned char)c]++;  // 处理无符号字符
+		total++;
+	}
+	fin.close();
+	
+	// 收集所有出现过的字符
+	for (int i = 0; i < 128; i++) {
+		if (count[i] > 0) {
+			chars[m++] = (char)i;
+		}
+	}
+}
 void InitHP(MinHeap &M) {//初始化堆
 	M.n = 0;
 }
@@ -146,27 +171,11 @@ int main() {
 	int idx;
 	inFile.open("data.txt");
 	char c;
-	while (inFile.get(c)) {
-		if (c >= 'a' && c <= 'z') {
-			// 计算对应下标（例如 'a' - 'a' = 0，'b'-'a'=1 ...）
-			int index = c - 'a';
-			cnt[index]++;  // 对应字母计数+1
-			total++;
-		}else if (c >= 'A' && c <= 'Z') {
-			// 计算对应下标（例如 'a' - 'a' = 0，'b'-'a'=1 ...）
-			int index = c - 'A' + 26;
-			cnt[index]++;  // 对应字母计数+1
-			total++;
-		}else if(strchr(".,;!?\"'()", c)){
-			int p_idx = 52 + strchr(".,;!?\"'()", c) - ".,;!?\"'()";  // 52-60
-			cnt[p_idx]++;
-			total++;
-		}else if (c >= '0' && c <= '9') {  
-			int num_idx = 61 + (c - '0');  // 数字0-9：索引60-69
-			if (num_idx < NUM) cnt[num_idx]++;
-		}
-	}
-	inFile.close();
+	int count[128], totalChars, m;
+	char chars[NUM];
+	char code[128][MAXCODE] = {0};
+	const char* originalFile = "original.txt";  
+	countFrequency(originalFile, count, totalChars, m, chars);
 	int leaf_cnt = 0;
 	for (int i = 0; i < NUM; i++) {
 		if (cnt[i] > 0) leaf_cnt++;
