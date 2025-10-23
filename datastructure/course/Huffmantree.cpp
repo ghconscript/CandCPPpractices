@@ -165,40 +165,66 @@ char** Code(HuffmanT T ,int leaf_cnt) {
 	return codes;
 }
 int main() {
-	ifstream inFile;
-	int cnt[NUM] = {0};
-	int total = 0;
-	int idx;
-	inFile.open("data.txt");
-	char c;
+	const char* originalFile = "original.txt";    // 原文件
+	const char* compressedFile = "compressed.bin";// 压缩文件
+	const char* decodedFile = "decoded.txt";      // 解压文件
+	
 	int count[128], totalChars, m;
 	char chars[NUM];
 	char code[128][MAXCODE] = {0};
-	const char* originalFile = "original.txt";  
+	
+	// 1. 统计字符频率
 	countFrequency(originalFile, count, totalChars, m, chars);
-	int leaf_cnt = 0;
-	for (int i = 0; i < NUM; i++) {
-		if (cnt[i] > 0) leaf_cnt++;
+	cout << "1. 字符频率统计完成" << endl;
+	cout << "   不同字符数: " << m << ", 总字符数: " << totalChars << endl;
+	
+	// 2. 构建哈夫曼树
+	HuffmanT ht;
+	for (int i = 0; i < m; i++) {
+		ht[i].weight = count[(unsigned char)chars[i]] / (double)totalChars;
+		ht[i].lchild = ht[i].rchild = ht[i].parent = -1;
 	}
-	HuffmanT T;//节点数组
-	CreatHT(T, cnt);
-	char** codes = Code(T, leaf_cnt);
-	idx = 0;  // 用于遍历编码数组
-	cout << "字符编码表：" << endl;
-	for (int i = 0; i < NUM; i++) {
-		if (T[i].lchild == -1 && T[i].rchild == -1 && T[i].weight > 0) {
-			if (i < 26) cout << (char)('a' + i) << "：";
-			else if (i < 52) cout << (char)('A' + i - 26) << "：";
-			else cout << "标点" << (i - 52) << "(" << ".,;!?\"'()"[i-52] << ")：";
-			cout << codes[idx++] << endl;
-		}
+	MinHeap heap;
+	InitHP(heap, ht, m);
+	buildHuffmanTree(ht, heap, m);
+	cout << "2. 哈夫曼树构建完成" << endl;
+	
+	// 3. 生成哈夫曼编码并显示
+	generateHuffmanCode(ht, m, chars, code);
+	cout << "3. 哈夫曼编码生成完成" << endl;
+	cout << "   编码表如下:" << endl;
+	for (int i = 0; i < m; i++) {
+		char c = chars[i];
+		cout << "   '";
+		if (c == ' ') cout << "空格";
+		else if (c == '\n') cout << "换行";
+		else if (c == '\t') cout << "制表";
+		else cout << c;
+		cout << "': " << code[(unsigned char)c] << endl;
 	}
 	
-	// 释放内存
-	for (int i = 0; i < leaf_cnt; i++) {
-		free(codes[i]);
+	// 4. 编码文件(压缩)
+	if (encodeFile(originalFile, compressedFile, code, chars, m, count)) {
+		cout << "4. 文件压缩完成，保存为: " << compressedFile << endl;
 	}
-	free(codes);
+	
+	// 5. 计算压缩率
+	double rate = calculateCompressionRate(originalFile, compressedFile);
+	if (rate >= 0) {
+		cout << "5. 压缩率: " << rate << "%" << endl;
+	}
+	
+	// 6. 译码文件(解压)
+	if (decodeFile(compressedFile, decodedFile)) {
+		cout << "6. 文件解压完成，保存为: " << decodedFile << endl;
+	}
+	
+	// 7. 比较原文件与解压文件
+	if (compareFiles(originalFile, decodedFile)) {
+		cout << "7. 验证结果: 原文件与解压文件完全一致，压缩解压成功!" << endl;
+	} else {
+		cout << "7. 验证结果: 原文件与解压文件不一致，出现错误!" << endl;
+	}
 	
 	return 0;
 
