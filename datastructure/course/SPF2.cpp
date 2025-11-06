@@ -169,7 +169,7 @@ private:
 	int v;                  // 顶点数
 	int** graph;            // 邻接矩阵 C
 	int** dist;             // 最短距离矩阵 D
-	int** path;             // 路径矩阵（记录中间顶点）
+	int** path;             // 路径矩阵（记录中间顶点）ppt里的P
 	
 public:
 	// 构造函数
@@ -181,7 +181,7 @@ public:
 			path[i] = new int[v];
 			for (int j = 0; j < v; j++) {
 				dist[i][j] = graph[i][j];
-				path[i][j] = (graph[i][j] != INF) ? -1 : -2;  // -1:直接可达；-2:不可达
+				path[i][j] = (graph[i][j] != INF) ? -1 : -2;  // -1:直接可达；-2:不可达 方便输出
 			}
 		}
 	}
@@ -191,8 +191,7 @@ public:
 		for (int k = 0; k < v; k++) {  // 中间顶点
 			for (int i = 0; i < v; i++) {  // 起点
 				for (int j = 0; j < v; j++) {  // 终点
-					if (dist[i][k] != INF && dist[k][j] != INF 
-						&& dist[i][k] + dist[k][j] < dist[i][j]) {
+					if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
 						dist[i][j] = dist[i][k] + dist[k][j];
 						path[i][j] = k;  // 记录中间顶点
 					}
@@ -245,7 +244,6 @@ public:
 		cout << endl;
 	}
 	
-	// 析构函数
 	~Floyd() {
 		for (int i = 0; i < v; i++) {
 			delete[] dist[i];
@@ -278,7 +276,7 @@ void loadGraphFromFile(const string& filename, int& v, int& e, int**& graph) {
 		}
 	}
 	
-	// 读取边信息（1-based输入，转为0-based）
+	// 读取边信息 1based转为0based
 	int tail, head, weight;
 	for (int i = 0; i < e; i++) {
 		fin >> tail >> head >> weight;
