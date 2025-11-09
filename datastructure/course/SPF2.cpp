@@ -11,8 +11,6 @@ void printPathHelper(int* path, int len) {
 	}
 }
 
-
-// Dijkstra算法类：单源最短路径
 class Dijkstra {
 private:
 	int v;                  // 顶点数
@@ -28,7 +26,7 @@ public:
 		visited = new bool[v];
 	}
 	
-	// 执行Dijkstra算法（源点为start，0-based）
+	//（源点为start，0-based）
 	void run(int start) {
 		// 初始化
 		for (int i = 0; i < v; i++) {
@@ -95,7 +93,7 @@ public:
 		}
 	}
 	
-	// 解决单目标最短路径（无vector实现）
+	// 解决单目标最短路径
 	void singleTarget(int target) {
 		cout << "\n=== Dijkstra单目标最短路径（所有顶点到目标" << target + 1 << "） ===" << endl;
 		// 反向图（边的方向反转）
@@ -163,7 +161,7 @@ public:
 };
 
 
-// Floyd-Warshall算法类：全局最短路径
+
 class Floyd {
 private:
 	int v;                  // 顶点数
@@ -255,7 +253,7 @@ public:
 };
 
 
-// 从文件读取图数据
+// 从文件
 void loadGraphFromFile(const string& filename, int& v, int& e, int**& graph) {
 	ifstream fin(filename);
 	if (!fin.is_open()) {
@@ -282,7 +280,7 @@ void loadGraphFromFile(const string& filename, int& v, int& e, int**& graph) {
 		fin >> tail >> head >> weight;
 		tail--;
 		head--;
-		graph[tail][head] = weight;  // 有向图（无向图需加 graph[head][tail] = weight;）
+		graph[tail][head] = weight; 
 	}
 	fin.close();
 }
