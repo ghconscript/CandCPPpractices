@@ -5,3 +5,21 @@ win optional class/
 *.txt
 *.zip
 *.bin
+# 编译产物
+/build/
+/bin/
+/obj/
+# 可执行文件（Mac/Linux 无后缀，Windows .exe）
+*.exe
+[!.]*  # 忽略无后缀的可执行文件
+# 调试符号文件夹（自动生成，重点忽略）
+*.dsym/
+# VS Code 配置
+/.vscode/
+# 日志/缓存/临时文件
+*.log
+*.cache
+/tmp/
+# 编译中间文件
+*.o
+*.out
