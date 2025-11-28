@@ -42,6 +42,46 @@ void Push(int x, STACK &S) {
 		return;
 	}
 }
+typedef struct {
+	int data[NumVertices];  // 存储队列元素的数组
+	int front;                 // 队头索引（指向当前队头元素）
+	int rear;                  // 队尾索引（指向队尾元素的下一个位置）
+	int count;                 // 当前队列元素个数（简化判空/判满）
+}QUEUE;//头在左 尾在右
+bool Empty(QUEUE q){
+	return q.count == 0;
+}
+void InitQueue(QUEUE& q) {
+	q.front = 0;    // 队头从0开始
+	q.rear = 0;     // 队尾从0开始（无元素时，队头=队尾）
+	q.count = 0;    // 初始元素个数为0
+}
+// 3. 入队操作（往队尾添加元素）
+void Push(QUEUE& q, int val) {
+	// 先判满：若元素个数达到最大容量，无法入队
+	if (q.count == NumVertices) {
+		cout << "队列已满，无法入队！" << endl;
+		return;
+	}
+	// 队尾添加元素，更新队尾索引和元素个数
+	q.data[q.rear] = val;
+	q.rear = (q.rear + 1) % NumVertices;  // 循环队列（避免数组空间浪费）
+	q.count++;
+}
+
+// 4. 出队操作（从队头删除元素，返回删除的值）
+int Pop(QUEUE& q) {
+	// 先判空：若元素个数为0，无法出队
+	if (q.count == 0) {
+		cout << "队列已空，无法出队！" << endl;
+		return 0;
+	}
+	// 取出队头元素，更新队头索引和元素个数
+	int out=q.data[q.front];
+	q.front = (q.front + 1) % NumVertices;  // 循环队列逻辑
+	q.count--;
+	return out;
+}
 // 邻接表边节点
 typedef struct EdgeNode {
 	int adjvex;         // 邻接顶点序号
@@ -71,6 +111,13 @@ bool visited[NumVertices]; //访问标记数组
 int cnt;
 int dfsSeq[NumVertices], bfsSeq[NumVertices];  // 搜索序列
 // 建立邻接矩阵（directed=false为无向图，true为有向图）
+
+void Refresh(){
+	for(int i=0;i<NumVertices;i++){
+		visited[i]=false;
+	}
+	cnt = 1;
+}
 void CreateMTgraph(MTgraph &G, bool directed = false) {
 	cout << "输入顶点数和边数：";
 	cin >> G.n >> G.e;
@@ -183,7 +230,8 @@ void recursivedfs(MTgraph &G,int source){
 	}
 }//MTgraph 版本的dfs
 
-void dfs(AdjGraph &G,int source){
+void DFS(AdjGraph &G,int source){
+	Refresh();
 	for(int i=0;i<G.n;i++){
 		visited[i]=false;
 	}
@@ -194,13 +242,72 @@ void dfs(AdjGraph &G,int source){
 	}
 	
 }
-void dfs(MTgraph &G,int source){
+void DFS(MTgraph &G,int source){
+	Refresh();
 	for(int i=0;i<G.n;i++){
 		visited[i]=false;
 	}
 	for(int i=0;i<G.n;i++){
 		if(!visited[i]){
 			recursivedfs(G,source);
+		}
+	}
+}
+
+void recursivebfs(AdjGraph &G,int source){
+	EdgeNode *cur;
+	QUEUE Q;int i;
+	InitQueue(Q);
+	
+	cout<<"访问"<<G.vexlist[source].vertex<<"号顶点"<<endl;
+	visited[source]=true;
+	Push(Q,source);
+	while(!Empty(Q)){
+		i=Pop(Q);
+		cur = G.vexlist[i].firstedge;
+		while(cur){
+			if(!visited[cur->adjvex]){
+				cout<<"访问"<<G.vexlist[cur->adjvex].vertex<<"号顶点"<<endl;
+				visited[cur->adjvex]=true;
+				Push(Q,cur->adjvex);
+			}
+			cur=cur->next;
+		}
+		
+	}
+	
+}
+void recursivebfs(MTgraph &G,int source){
+	int i,j;
+	QUEUE Q;
+	InitQueue(Q);
+	cout<<"访问"<<G.vertex[source]<<"号顶点"<<endl;
+	visited[source]=true;
+	Push(Q,source);
+	while(!Empty(Q)){
+		i=Pop(Q);
+		for(int i=0;i<G.n;i++){
+			if(G.edge[i][j]==1&&!visited[j]){
+				cout<<"访问"<<G.vertex[j]<<"号顶点"<<endl;
+				visited[j]=true;
+				Push(Q,j);
+			}
+		}
+	}
+}
+void BFS(AdjGraph &G,int source){
+	Refresh();
+	for(int i=0;i<G.n;i++){
+		if(!visited[i]){
+			recursivebfs(G,source);
+		}
+	}
+}
+void BFS(MTgraph &G,int source){
+	Refresh();
+	for(int i=0;i<G.n;i++){
+		if(!visited[i]){
+			recursivebfs(G,source);
 		}
 	}
 }
